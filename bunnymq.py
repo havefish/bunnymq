@@ -17,9 +17,9 @@ class Queue:
         
         self.setup()
         
-        self.handler = None
-        self.error_handlers = []
-        self.last_acked = True
+        self._handler = None
+        self._error_handlers = []
+        self._last_acked = True
         
     def disconnect(self):
         if not hasattr(self, 'connection'):
@@ -61,18 +61,18 @@ class Queue:
         self.setup()
         self._put(msg, priority)
 
-    def worker(self, func):
-        self.handler = func
+    def handler(self, func):
+        self._handler = func
         return func
     
     def error_handler(self, *errors, requeue=True):
         def wrapped(func):
-            self.error_handlers.append((errors, requeue, func))
+            self._error_handlers.append((errors, requeue, func))
             return func
         return wrapped   
                 
     def handle_error(self, e, msg):
-        for errors, requeue, handler in self.error_handlers:
+        for errors, requeue, handler in self._error_handlers:
             
             if not isinstance(e, errors):
                 continue
@@ -108,25 +108,27 @@ class Queue:
         self.last_acked = True
 
     def __next__(self):
-        method, _, body = next(self.stream)
-        self.delivery_tag = method.delivery_tag
-        return self.serializer.loads(body)
-
-    def get(self):
         assert self.last_acked, 'what happened to the last msg'
 
         try:
-            msg = next(self)
+            r = next(self.stream)
         except StopIteration:
             self.setup()
-            msg = next(self)
+            r = next(self.stream)
 
+        method, _, body = r
+
+        self.delivery_tag = method.delivery_tag
         self.last_acked = False
-        return msg
+
+        return self.serializer.loads(body)
+
+    def get(self):
+        return next(self)
     
     def __iter__(self):
         while True:
-            yield self.get()
+            yield next(self)
             
     def consume(self):
         for msg in self:
