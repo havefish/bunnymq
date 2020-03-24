@@ -1,6 +1,6 @@
 # Bunnymq
 
-Simple transparent wrapper for a small subset of Pika. It has a nice interface.
+Simple transparent wrapper for a small portion of [Pika](https://pika.readthedocs.io/en/stable/). It has a nice interface.
 
 # Install
 
