@@ -1,6 +1,6 @@
 # Bunnymq
 
-Simple transparent wrapper for a small subset of Pika.
+Simple transparent wrapper for a small subset of Pika. It has a nice interface.
 
 # Install
 
@@ -27,6 +27,14 @@ This creates a queue named `test` assuming default values for other parameters l
 3. Any keyword arguments that `pika.ConnectionParameters` takes _except_ the parameter `credentials`.
 
 
+Producing to the queue has one interface, the `put` method. However, there are multiple interfaces available for consumers
+
+* [Basic interface](#basic-interface)
+* [Iterable interface](#iterable-interface)
+* [Decorator interface](#decorator-interface) (recommended)
+
+These are described below.
+
 ### Basic Interface
 #### Put
 
@@ -34,6 +42,12 @@ This creates a queue named `test` assuming default values for other parameters l
 >>> queue.put({'a': 1})
 ```
 The message is automatically serialized.
+
+The queue, by default, is a priority queue with priorities ranging from 1 (low) through 10 (high). By default the value is 5. To put a message a with a custom priority,
+```python
+>>> queue.put({'b': 1}, priority=8)
+```
+This message will be consumed before the ones with lower priority.
 #### Get
 
 ```python
