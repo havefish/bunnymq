@@ -92,10 +92,10 @@ This sends a `basic_reject` with `requeue=True`
 for msg in queue:
     try:
         # handle the message
-    except NonRetirableError:
+    except NonRetriableError:
         # do some logging, alerting ...
         queue.task_done()
-    except RetirableError:
+    except RetriableError:
         # do some logging, alerting ...
         queue.requeue()
     except Exception:
@@ -114,17 +114,17 @@ def process(msg):
 
 
 @queue.error_handler(E1, E2, requeue=False)
-def non_retirable_error_1(msg, e):
+def non_retriable_error_1(msg, e):
     pass
 
 
 @queue.error_handler(E3, E4, requeue=False)
-def non_retirable_error_2(msg, e):
+def non_retriable_error_2(msg, e):
     pass
 
 
 @queue.error_handler(E5, E6, ...)
-def retirable_error(msg, e):
+def retriable_error(msg, e):
     pass
 
 ```
