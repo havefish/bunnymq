@@ -91,7 +91,7 @@ class Queue:
             
     def requeue(self):
         try:
-            self.channel.basic_reject(delivery_tag=self.delivery_tag, requeue=True)
+            self.channel.basic_reject(delivery_tag=self._delivery_tag, requeue=True)
         except Exception as e:
             print(e)
             self.setup()
@@ -100,7 +100,7 @@ class Queue:
 
     def task_done(self):
         try:
-            self.channel.basic_ack(delivery_tag=self.delivery_tag)
+            self.channel.basic_ack(delivery_tag=self._delivery_tag)
         except Exception as e:
             print(e)
             self.setup()
@@ -118,11 +118,15 @@ class Queue:
             r = next(self.stream)
 
         method, _, body = r
-
-        self.delivery_tag = method.delivery_tag
+        
+        self._delivery_tag = method.delivery_tag
         self._processing = True
 
         return self.serializer.loads(body)
+
+    def __len__(self):
+        res = self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
+        return res.method.message_count
 
     def get(self):
         return next(self)
