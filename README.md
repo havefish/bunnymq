@@ -26,6 +26,7 @@ This creates a queue named `test` assuming default values for other parameters l
 3. `serializer` defaults to `pickle` module. This can be any object that implements the interface `dumps` and `loads`. Hence `json` module will also work out of the box.
 3. Any keyword arguments that `pika.ConnectionParameters` takes _except_ the parameter `credentials`.
 
+> This library works with the default exchange
 
 Producing to the queue has one interface, the `put` method. However, there are multiple interfaces available for consumers
 
