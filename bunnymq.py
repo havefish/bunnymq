@@ -17,6 +17,7 @@ class Queue:
         
         self.setup()
         
+        self._processing = False
         self._handler = None
         self._error_handlers = []
         self._last_acked = True
@@ -95,7 +96,7 @@ class Queue:
             print(e)
             self.setup()
 
-        self.last_acked = True
+        self._processing = False
 
     def task_done(self):
         try:
@@ -104,10 +105,11 @@ class Queue:
             print(e)
             self.setup()
 
-        self.last_acked = True
+        self._processing = False
 
     def __next__(self):
-        assert self.last_acked, 'what happened to the last msg'
+        if self._processing:
+            raise Exception('The previous message was neither marked done nor requeued.')
 
         try:
             r = next(self.stream)
@@ -118,7 +120,7 @@ class Queue:
         method, _, body = r
 
         self.delivery_tag = method.delivery_tag
-        self.last_acked = False
+        self._processing = True
 
         return self.serializer.loads(body)
 
