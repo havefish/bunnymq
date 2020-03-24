@@ -128,6 +128,10 @@ def non_retriable_error_2(msg, e):
 def retriable_error(msg, e):
     pass
 
+
+if __name__ == '__main__':
+    queue.consume()
+
 ```
 
 > Any number of error handlers can be registered. In the _Iterable interface_ this would make the try/except block extremely ugly.
