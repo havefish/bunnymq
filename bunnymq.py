@@ -26,7 +26,6 @@ class Queue:
             return
         
         try:
-            print('closing')
             self.connection.close()
         except Exception as e:
             print(e)
