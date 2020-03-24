@@ -50,7 +50,7 @@ This will raise an exception:
 Exception: The previous message was neither marked done nor requeued.
 ```
 
-#### Ack
+#### Mark done
 ```python
 >>> queue.task_done()
 ```
@@ -66,6 +66,11 @@ This sends a `basic_ack`.
 
 This sends a `basic_reject` with `requeue=True`
 
+#### Queue size
+```python
+>>> len(queue)
+2
+```
 
 ### Iterable Interface
 
