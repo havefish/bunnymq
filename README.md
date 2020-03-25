@@ -109,23 +109,26 @@ for msg in queue:
 This one is the __recommended__ usage because it is the cleanest.
 
 ```python
-@queue.handler
+@queue.on('message')  # <-- marked done automatically, if there are no errors
 def process(msg):
     pass
 
 
-@queue.error_handler(E1, E2, requeue=False)
-def non_retriable_error_1(msg, e):
+@queue.on('error', NotFound, NotNeeded, requeue=False)  # <-- marked done automatically
+def _(msg, e):
+    # log the event
     pass
 
 
-@queue.error_handler(E3, E4, requeue=False)
-def non_retriable_error_2(msg, e):
+@queue.on('error', BlockedContent, requeue=False)  # <-- marked done automatically
+def _(msg, e):
+    # send an alert and log the event
     pass
 
 
-@queue.error_handler(E5, E6, ...)
-def retriable_error(msg, e):
+@queue.on('error', RateLimited)  # <-- requeued automatically
+def _(msg, e):
+    # log the event
     pass
 
 
@@ -137,13 +140,13 @@ if __name__ == '__main__':
 > Any number of error handlers can be registered. In the _Iterable interface_ this would make the try/except block extremely ugly.
 
 #### Workflow
-The `queue` object has two methods that are registration decorators:
+The `queue` object has an `on` method with which we can register handlers for two types of events:
 
-1. `queue.handler`: bound to a single callable, that processes the message
-2. `queue.error_handler`: bound to a list of callables, that handle the errors 
+1. `'message'`: bound to a single callable, that processes the message
+2. `'error'`: bound to a list of callables, that handle the errors. The error handlers allow us to capture and process **domain specific exceptions**.
     
-Once a message is consumed, `queue.handler` callable is invoked passing the message
+Once a message is consumed, the `'message'` handler is invoked passing the message
 
 1. if there are no exceptions the message is marked done.
 2. If there are errors, the appropriate handler is invoked, depending on the type of the raised exception. The message is marked done or requeued depending on the `requeue` argument. By default it is `True`.
-3. If none of the handlers match, the message is requeued and the exception is raised.
+3. If none of the handlers match, the message is requeued and the exception is re-raised.
