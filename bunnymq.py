@@ -72,24 +72,6 @@ class Queue:
             return func
         return wrapped   
                 
-    def handle_error(self, e, msg):
-        for errors, requeue, handler in self._error_handlers:
-            
-            if not isinstance(e, errors):
-                continue
-                
-            handler(msg, e)
-            
-            if requeue:
-                self.requeue()
-            else:
-                self.task_done()
-            
-            return
-                
-        self.requeue()
-        raise e
-            
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
@@ -152,12 +134,30 @@ class Queue:
     def __iter__(self):
         while True:
             yield next(self)
+
+    def _handle_error(self, e, msg):
+        for errors, requeue, handler in self._error_handlers:
+            
+            if not isinstance(e, errors):
+                continue
+                
+            handler(msg, e)
+            
+            if requeue:
+                self.requeue()
+            else:
+                self.task_done()
+            
+            return
+                
+        self.requeue()
+        raise e
             
     def consume(self):
         for msg in self:
             try:
                 self.handler(msg)
             except Exception as e:
-                self.handle_error(e, msg)
+                self._handle_error(e, msg)
             else:
                 self.task_done()
