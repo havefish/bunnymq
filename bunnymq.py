@@ -62,21 +62,23 @@ class Queue:
             except Errors:
                 time.sleep(2)
         
-    def _put(self, msg, priority, **kwargs):
+    def _put(self, msg, **kwargs):
         body = self.serializer.dumps(msg)
-        properties = pika.BasicProperties(delivery_mode=2, priority=priority, **kwargs)
+        properties = pika.BasicProperties(delivery_mode=2, **kwargs)
         self.channel.basic_publish(exchange='', routing_key=self.queue, body=body, properties=properties)
         
-    def put(self, msg, priority=5):
+    def put(self, msg, priority=5, **kwargs):
         assert 0 < int(priority) <  self.max_priority
+
+        func = lambda: self._put(msg, priority=priority, **kwargs)
         
         try:
-            return self._put(msg, priority)
+            return func()
         except Errors:
             pass
         
         self.setup()
-        self._put(msg, priority)
+        func()
 
     def on(self, event, *errors, requeue=True):
         e = event.strip().lower()
