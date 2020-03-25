@@ -78,14 +78,14 @@ class Queue:
         self.setup()
         self._put(msg, priority)
 
-    def on(self, event, *args, **kwargs):
+    def on(self, event, *errors, requeue=True):
         e = event.strip().lower()
 
         if e == 'message':
             return self._h
 
         if e == 'error':
-            return self._errh(*args, **kwargs)
+            return self._errh(errors, requeue)
 
         raise Exception(f"event must be one of {'message', 'error'}, given {e!r}")
 
@@ -93,7 +93,7 @@ class Queue:
         self._handler = func
         return func
     
-    def _errh(self, *errors, requeue=True):
+    def _errh(self, errors, requeue):
         def wrapped(func):
             self._error_handlers.append((errors, requeue, func))
             return func
