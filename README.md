@@ -17,6 +17,8 @@ pip install bunnymq
 * Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](#redelivery-issues).
 * Easy parallelization by starting multiple workers to [share the load](#multiple-consumers). No two consumers will ever get the same message.
 
+It is very important that the code be readable. Pull requests that are aimed at making the code cleaner and more understandable are most welcome.
+
 ## Usage
 
 Wheather you want a producer or a consumer, you create the following object
