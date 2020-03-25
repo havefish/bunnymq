@@ -10,12 +10,12 @@ pip install bunnymq
 
 ## Features
 
-* Automatic serialization and deserialization of messages. Using a custom serializer is almost [trivial](custom-serializers).
+* Automatic serialization and deserialization of messages. Using a custom serializer is almost [trivial](#custom-serializers).
 * Multiple consumer patterns.
 * Automatic retry while publishing
 * Automatic handling of connection failures while consuming
-* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](redelivery-issues).
-* Easy parallelization by starting multiple workers to [share the load](multiple-consumers). No two consumers will ever get the same message.
+* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](#redelivery-issues).
+* Easy parallelization by starting multiple workers to [share the load](#multiple-consumers). No two consumers will ever get the same message.
 
 ## Usage
 
