@@ -30,13 +30,10 @@ class Queue:
         self._requeued = False
         
     def disconnect(self):
-        if not hasattr(self, 'connection'):
-            return
-        
         try:
             self.connection.close()
-        except Exception as e:
-            print(e)
+        except Exception:
+            pass
 
     def _declare_queue(self):
         return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
@@ -102,8 +99,7 @@ class Queue:
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
-        except Exception as e:
-            print(e)
+        except Exception:
             self.setup()
 
         self._processing = False
@@ -112,8 +108,7 @@ class Queue:
     def task_done(self):
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
-        except Exception as e:
-            print(e)
+        except Exception:
             self.setup()
 
         self._processing = False
