@@ -81,7 +81,7 @@ Exception: The previous message was neither marked done nor requeued.
 >>> queue.task_done()
 ```
 
-This informs the broker that message has been successfully processed. This may also be used where the message was not sucessfully processed but it is _not_ to be retired.
+This informs the broker that message has been successfully processed. This may also be used where the message was not sucessfully processed but it is _not_ to be retried.
 
 > The semantics of this method is somewhat different from the one in `queue.Queue` in the standard library, in that there is no `queue.join` in our case that is waiting for invocation of `task_done`.
 
