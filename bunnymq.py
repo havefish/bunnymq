@@ -3,6 +3,7 @@
 __version__ = '0.0.1'
 
 import pickle
+from hashlib import md5
 
 import pika
 
@@ -19,10 +20,14 @@ class Queue:
         
         self.setup()
         
-        self._processing = False
+        # registered callables
         self._handler = None
         self._error_handlers = []
-        self._last_acked = True
+
+        # flags
+        self._processing = False
+        self._last_msg_hash = None
+        self._requeued = True
         
     def disconnect(self):
         if not hasattr(self, 'connection'):
@@ -93,23 +98,25 @@ class Queue:
             
     def requeue(self):
         try:
-            self.channel.basic_reject(delivery_tag=self._delivery_tag, requeue=True)
+            self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
         except Exception as e:
             print(e)
             self.setup()
 
         self._processing = False
+        self._requeued = True
 
     def task_done(self):
         try:
-            self.channel.basic_ack(delivery_tag=self._delivery_tag)
+            self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
         except Exception as e:
             print(e)
             self.setup()
 
         self._processing = False
+        self._requeued = False
 
-    def __next__(self):
+    def _move_ahead(self):
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
@@ -119,12 +126,30 @@ class Queue:
             self.setup()
             r = next(self.stream)
 
-        method, _, body = r
-        
-        self._delivery_tag = method.delivery_tag
-        self._processing = True
+        self._method, _, self._body = r
 
-        return self.serializer.loads(body)
+    @property
+    def _msg_hash(self):
+        return md5(self._body).hexdigest
+
+    @property
+    def _got_old_msg(self):
+        return all(
+            self._method.redelivered,
+            self._msg_hash == self._last_msg_hash,
+            not self._requeued,  # an explicitly requeued message is considered new
+        )
+
+    def __next__(self):
+        self._move_ahead()
+
+        if self._got_old_msg:
+            self.task_done()
+            self._move_ahead()
+
+        self._processing = True
+        self._last_msg_hash = self._msg_hash
+        return self.serializer.loads(self._body)
 
     def __len__(self):
         res = self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
