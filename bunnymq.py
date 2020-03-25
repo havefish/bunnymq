@@ -183,7 +183,7 @@ class Queue:
     def consume(self):
         for msg in self:
             try:
-                self.handler(msg)
+                self._handler(msg)
             except Exception as e:
                 self._handle_error(e, msg)
             else:
