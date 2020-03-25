@@ -2,13 +2,20 @@
 
 Simple transparent wrapper for a small portion of [Pika](https://pika.readthedocs.io/en/stable/). It has a nice interface.
 
-# Install
+## Install
 
 ```
 pip install bunnymq
 ```
 
-If `pika` works, this will also work.
+## Features
+
+* Automatic serialization and deserialization of messages. Using a custom serializer is almost [trivial](custom-serializers).
+* Multiple consumer patterns.
+* Automatic retry while publishing
+* Automatic handling of connection failures while consuming
+* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](redelivery-issues).
+* Easy parallelization by starting multiple workers to [share the load](multiple-consumers). No two consumers will ever get the same message.
 
 ## Usage
 
@@ -28,7 +35,9 @@ This creates a queue named `test` assuming default values for other parameters l
 
 > This library works with the default exchange
 
-Producing to the queue has one interface, the `put` method. However, there are multiple interfaces available for consumers
+> If a queue exists in the broker with the same name but different properties (created by some other means), an exception will be raised.
+
+There is only one simple way to publish a message to the queue, the `put` method. However, there are multiple patterns available for consumers
 
 * [Basic interface](#basic-interface)
 * [Iterable interface](#iterable-interface)
@@ -70,7 +79,7 @@ Exception: The previous message was neither marked done nor requeued.
 >>> queue.task_done()
 ```
 
-This sends a `basic_ack`.
+This informs the broker that message has been successfully processed. This may also be used where the message was not sucessfully processed but it is _not_ to be retired.
 
 > The semantics of this method is somewhat different from the one in `queue.Queue` in the standard library, in that there is no `queue.join` in our case that is waiting for invocation of `task_done`.
 
@@ -79,7 +88,7 @@ This sends a `basic_ack`.
 >>> queue.requeue()
 ```
 
-This sends a `basic_reject` with `requeue=True`
+This informs the broker that the message was not sucessfully processed and should be redelivered so that it can be retried.
 
 #### Queue size
 ```python
@@ -87,7 +96,11 @@ This sends a `basic_reject` with `requeue=True`
 2
 ```
 
+> Python standard library `queue` module has a `Queue.qsize` method and that is the [right] choice. However `len` is convenient. This may change in future.
+
 ### Iterable Interface
+
+The `Queue` class implemets iterable protocol, namely the `__iter__` method, which enables the following:
 
 ```python
 for msg in queue:
@@ -150,3 +163,63 @@ Once a message is consumed, the `'message'` handler is invoked passing the messa
 1. if there are no exceptions the message is marked done.
 2. If there are errors, the appropriate handler is invoked, depending on the type of the raised exception. The message is marked done or requeued depending on the `requeue` argument. By default it is `True`.
 3. If none of the handlers match, the message is requeued and the exception is re-raised.
+
+## Custom Serializers
+A serializer is any object that implements two methods:
+1. `dumps` returns `str`/`bytes`
+2. `loads` that takes `bytes`. 
+
+Hence `json` module can be a drop in replacement.
+
+```python
+>>> import json
+>>> queue = Queue('test', serializer=json)
+```
+
+Here is an abstract class.
+
+```python
+class MySerializer:
+    def dumps(self, msg) -> bytes:
+        raise NotImplementedError
+
+    def loads(self, content:bytes):
+        raise NotImplementedError
+```
+
+## Multiple Consumers
+Let `consumer.py` be the module that can be run as a main program.
+
+```
+python consumer.py
+```
+Alternatively, the module exists inside a package `pkg`, then:
+
+```
+python -m pkg.consumer
+```
+
+This starts a worker. To start another one, open another terminal and invoke this again. Now you have two consumers.
+
+If the application is containeried, the consumers can be run in the background and scaling up and down is trivial with [docker-compose](https://docs.docker.com/compose/).
+
+## Redelivery Issues
+
+Pika [recommends](https://www.rabbitmq.com/reliability.html#consumer-side) the consumers be designed to be idempotent.
+
+> In the event of network failure (or a node failure), messages can be redelivered, and consumers must be prepared to handle deliveries they have seen in the past.
+
+This is important because if the task takes time and the connection has closed by the time it finishes, the acknoledgement cannot be sent. The [reason](https://www.rabbitmq.com/confirms.html#consumer-acks-delivery-tags) being
+
+> Because delivery tags are scoped per channel, deliveries must be acknowledged on the same channel they were received on.
+
+Assuming the consumer is not idempotent, in case of redelivery of such a message, it should be handled before the consumer recieves it again.
+
+Two situations arise:
+
+1. The long running task completes sucessfully and wants to acknoledge. But the connection has closed and the new connection (and a new channel) won't accept the old delivery tag.
+2. The long running task encounters error and wants to requeue. But the connection has closed and the new connection (and a new channel) won't accept the old delivery tag.
+
+Unacked messages are redelivered by default, so the 2nd situation should not be a problem. However, if one wants to solve the 1st situation, it has to be kept in mind that the consumer might have explicitly requested a requeue.
+
+The current implementation addresses both the situations.
