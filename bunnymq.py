@@ -2,11 +2,15 @@
 
 __version__ = '0.0.1'
 
+import logging
 import pickle
 import time
 from hashlib import md5
 
 import pika
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 Errors = (
     pika.exceptions.ConnectionClosed,
@@ -38,8 +42,8 @@ class Queue:
     def disconnect(self):
         try:
             self.connection.close()
-        except Exception:
-            pass
+        except Exception as e:
+            log.debug(e)
 
     def _declare_queue(self):
         return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
@@ -59,7 +63,8 @@ class Queue:
         while True:
             try:
                 return self._setup()
-            except Errors:
+            except Errors as e:
+                log.error(f'{e}, retrying in 2 secs.')
                 time.sleep(2)
         
     def _put(self, msg, **kwargs):
@@ -74,8 +79,8 @@ class Queue:
         
         try:
             return func()
-        except Errors:
-            pass
+        except Errors as e:
+            log.debug(e)
         
         self.setup()
         func()
@@ -104,7 +109,8 @@ class Queue:
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
-        except Errors:
+        except Errors as e:
+            log.debug(e)
             self.setup()
 
         self._processing = False
@@ -113,13 +119,16 @@ class Queue:
     def task_done(self):
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
-        except Errors:
+        except Errors as e:
+            log.debug(e)
             self.setup()
 
         self._processing = False
         self._requeued = False
 
     def _move_ahead(self):
+        log.debug('Moving ahead')
+
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
@@ -147,6 +156,7 @@ class Queue:
         self._move_ahead()
 
         if self._got_old_msg:
+            log.debug('Got old message')
             self.task_done()
             self._move_ahead()
 
@@ -169,6 +179,8 @@ class Queue:
             
             if not isinstance(e, errors):
                 continue
+
+            log.debug(f'Error {e!r} is of type {errors!r}')
                 
             handler(msg, e)
             
@@ -190,6 +202,7 @@ class Queue:
             try:
                 self._handler(msg)
             except Exception as e:
+                log.debug(e)
                 self._handle_error(e, msg)
             else:
                 self.task_done()
