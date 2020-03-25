@@ -7,6 +7,11 @@ from hashlib import md5
 
 import pika
 
+Errors = (
+    pika.exceptions.ConnectionClosed,
+    pika.exceptions.ChannelClosed,
+)
+
 
 class Queue:
     max_priority = 10
@@ -56,7 +61,7 @@ class Queue:
         
         try:
             return self._put(msg, priority)
-        except Exception:
+        except Errors:
             pass
         
         self.setup()
@@ -75,7 +80,7 @@ class Queue:
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
-        except Exception:
+        except Errors:
             self.setup()
 
         self._processing = False
@@ -84,7 +89,7 @@ class Queue:
     def task_done(self):
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
-        except Exception:
+        except Errors:
             self.setup()
 
         self._processing = False
