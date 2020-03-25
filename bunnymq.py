@@ -1,6 +1,6 @@
 """Simple transparent wrapper for a small portion of Pika. It has a nice interface."""
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 import logging
 import pickle
