@@ -37,13 +37,16 @@ class Queue:
             self.connection.close()
         except Exception as e:
             print(e)
-            
+
+    def _declare_queue(self):
+        return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
+
     def setup(self):
         self.disconnect()
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(credentials=self.credentials, **self.conn_params))                                                
         self.channel = self.connection.channel()
         self.stream = self.channel.consume(self.queue)
-        self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
+        self._declare_queue()
         self.channel.basic_qos(prefetch_count=1)
         
     def _put(self, msg, priority):
@@ -152,8 +155,7 @@ class Queue:
         return self.serializer.loads(self._body)
 
     def __len__(self):
-        res = self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
-        return res.method.message_count
+        return self._declare_queue().method.message_count
 
     def get(self):
         return next(self)
