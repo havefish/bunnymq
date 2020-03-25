@@ -46,16 +46,10 @@ class Queue:
         self._declare_queue()
         self.channel.basic_qos(prefetch_count=1)
         
-    def _put(self, msg, priority):
-        self.channel.basic_publish(
-            exchange='',
-            routing_key=self.queue,
-            body=self.serializer.dumps(msg),
-            properties=pika.BasicProperties(
-                delivery_mode=2,
-                priority=priority,
-            )
-        )
+    def _put(self, msg, priority, **kwargs):
+        body = self.serializer.dumps(msg)
+        properties = pika.BasicProperties(delivery_mode=2, priority=priority, **kwargs)
+        self.channel.basic_publish(exchange='', routing_key=self.queue, body=body, properties=properties)
         
     def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
