@@ -16,12 +16,6 @@ are most welcome.
 
 > When in doubt always refer to the [RabbitMQ](https://www.rabbitmq.com/getstarted.html) guides and the [Pika](https://pika.readthedocs.io/en/stable/) docs.
 
-## Install
-
-```
-pip install bunnymq
-```
-
 ## Features
 
 * Automatic serialization and deserialization of messages. Using a custom serializer is almost [trivial](#custom-serializers).
@@ -32,6 +26,12 @@ pip install bunnymq
 * Easy parallelization by starting multiple workers to [share the load](#multiple-consumers). No two consumers will ever get the same message.
 
 It is very important that the code be readable. Pull requests that are aimed at making the code cleaner and more understandable are most welcome.
+
+## Install
+
+```
+pip install bunnymq
+```
 
 ## Usage
 
