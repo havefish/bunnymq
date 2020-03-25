@@ -3,6 +3,7 @@
 __version__ = '0.0.1'
 
 import pickle
+import time
 from hashlib import md5
 
 import pika
@@ -43,13 +44,23 @@ class Queue:
     def _declare_queue(self):
         return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
 
-    def setup(self):
+    def _setup(self):
         self.disconnect()
+
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(credentials=self.credentials, **self.conn_params))                                                
         self.channel = self.connection.channel()
-        self.stream = self.channel.consume(self.queue)
+
         self._declare_queue()
         self.channel.basic_qos(prefetch_count=1)
+
+        self.stream = self.channel.consume(self.queue)
+
+    def setup(self):
+        while True:
+            try:
+                return self._setup()
+            except Errors:
+                time.sleep(2)
         
     def _put(self, msg, priority, **kwargs):
         body = self.serializer.dumps(msg)
