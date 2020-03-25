@@ -183,6 +183,9 @@ class Queue:
         raise e
             
     def consume(self):
+        if self._handler is None:
+            raise Exception('consume needs a message handler')
+
         for msg in self:
             try:
                 self._handler(msg)
