@@ -1,6 +1,20 @@
 # Bunnymq
 
-Simple transparent wrapper for a small portion of [Pika](https://pika.readthedocs.io/en/stable/). It has a nice interface.
+Talk to RabbitMQ in Python.
+
+The official Python library to interact with RabbitMQ is [Pika](https://pika.readthedocs.io/en/stable/). However, I have never been a big fan of the interface Pika provides. It is too bloated for simple tasks. This wrapper tries to provide a nicer interface for a _very small albeit useful_ portion of the aforementioned library.
+
+Pull requests that are aimed at
+
+* making the code cleaner, more understandable and pythonic
+* better abstraction and interface
+* better implemetation
+* bug fixes
+* better documentation
+
+are most welcome. 
+
+> When in doubt always refer to the [RabbitMQ](https://www.rabbitmq.com/getstarted.html) guides and the [Pika](https://pika.readthedocs.io/en/stable/) docs.
 
 ## Install
 
