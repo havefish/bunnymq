@@ -30,7 +30,7 @@ This creates a queue named `test` assuming default values for other parameters l
 
 1. `username` defaults to `'guest'`
 2. `password` defaults to `'guest'`
-3. `serializer` defaults to `pickle` module. This can be any object that implements the interface `dumps` and `loads`. Hence `json` module will also work out of the box.
+3. `serializer` defaults to `pickle` module.
 3. Any keyword arguments that `pika.ConnectionParameters` takes _except_ the parameter `credentials`.
 
 > This library works with the default exchange
@@ -222,4 +222,4 @@ Two situations arise:
 
 Unacked messages are redelivered by default, so the 2nd situation should not be a problem. However, if one wants to solve the 1st situation, it has to be kept in mind that the consumer might have explicitly requested a requeue.
 
-The current implementation addresses both the situations.
+**The current implementation addresses both the situations.**
