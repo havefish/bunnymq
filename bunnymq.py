@@ -27,7 +27,7 @@ class Queue:
         # flags
         self._processing = False
         self._last_msg_hash = None
-        self._requeued = True
+        self._requeued = False
         
     def disconnect(self):
         if not hasattr(self, 'connection'):
@@ -133,15 +133,15 @@ class Queue:
 
     @property
     def _msg_hash(self):
-        return md5(self._body).hexdigest
+        return md5(self._body).hexdigest()
 
     @property
     def _got_old_msg(self):
-        return all(
+        return all([
             self._method.redelivered,
             self._msg_hash == self._last_msg_hash,
             not self._requeued,  # an explicitly requeued message is considered new
-        )
+        ])
 
     def __next__(self):
         self._move_ahead()
