@@ -1,29 +1,42 @@
 # Bunnymq
 
-Talk to RabbitMQ in Python.
+Simple messaging with RabbitMQ and Python.
 
-The official Python library to interact with RabbitMQ is [Pika](https://pika.readthedocs.io/en/stable/). However, I have never been a big fan of the interface Pika provides. It is too bloated for simple tasks. This wrapper tries to provide a nicer interface for a _very small albeit useful_ portion of the aforementioned library.
+Basic Usage:
 
-Pull requests that are aimed at
+```python
+>>> queue = Queue('test')
 
-* making the code cleaner, more understandable and pythonic
-* better abstraction and interface
-* better implemetation
-* bug fixes
-* better documentation
+>>> queue.put(1)
+>>> queue.put('hello', priority=8)
+>>> queue.put({'a': 1})
 
-are most welcome. 
+>>> queue.get()
+'hello'
+>>> queue.task_done()
 
-> When in doubt always refer to the [RabbitMQ](https://www.rabbitmq.com/getstarted.html) guides and the [Pika](https://pika.readthedocs.io/en/stable/) docs.
+>>> queue.get()
+1
+>>> queue.requeue()
+```
+
+Iterating over a queue indefinitely, waiting if nothing is available:
+
+```python
+>>> for item in queue:
+...     print(item)
+...     queue.task_done()
+```
+
+Head over to the [tutorial](index.md) for detailed usage.
 
 ## Features
 
-* Automatic serialization and deserialization of messages. Using a custom serializer is almost [trivial](#custom-serializers).
-* Multiple consumer patterns.
+* Automatic serialization and deserialization of Python objects
 * Automatic retry while publishing
 * Automatic handling of connection failures while consuming
 * Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](#redelivery-issues).
-* Easy parallelization by starting multiple workers to [share the load](#multiple-consumers). No two consumers will ever get the same message.
+* Easy parallelization by starting multiple workers to [share the load](#multiple-consumers).
 
 
 ## Install
