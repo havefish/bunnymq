@@ -66,18 +66,18 @@ class Queue:
                 log.error(f'{e}, retrying in 2 secs.')
                 time.sleep(2)
         
-    def _put(self, msg, **kwargs):
+    def _put(self, msg, priority):
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queue,
             body=pickle.dumps(msg),
-            properties=pika.BasicProperties(delivery_mode=2),
+            properties=pika.BasicProperties(delivery_mode=2, priority=priority),
         )
         
-    def put(self, msg, priority=5, **kwargs):
+    def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
 
-        func = lambda: self._put(msg, priority=priority, **kwargs)
+        func = lambda: self._put(msg, priority=priority)
         
         try:
             return func()
