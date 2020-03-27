@@ -21,7 +21,7 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, name, host='localhost', port=5672, username='guest', password='guest'):
+    def __init__(self, name, host='localhost', port=5672, username='guest', password='guest', max_retries=100, retry_interval=5):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
 
@@ -30,6 +30,12 @@ class Queue:
         self.host = host
         self.port = port
         self.credentials = pika.PlainCredentials(username, password)
+
+        self.max_retries = int(max_retries)
+        assert self.max_retries > 0, f'max retries should be > 0, given {self.max_retries!r} times'
+
+        self.retry_interval = int(retry_interval)
+        assert self.retry_interval > 0, f'retry interval should be > 0, given {self.retry_interval!r} sec'
         
         self.setup()
         
@@ -62,12 +68,12 @@ class Queue:
         self.stream = self.channel.consume(self.queue)
 
     def setup(self):
-        while True:
+        for _ in range(self.max_retries):
             try:
                 return self._setup()
             except Errors as e:
                 log.error(f'{e}, retrying in 2 secs.')
-                time.sleep(2)
+                time.sleep(self.retry_interval)
         
     def _put(self, msg, priority):
         self.channel.basic_publish(
