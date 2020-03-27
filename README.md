@@ -1,4 +1,4 @@
-# Bunnymq
+# BunnyMQ
 
 Simple messaging with RabbitMQ and Python.
 
@@ -36,7 +36,7 @@ Head over to the [tutorial](http://havefish.github.com/bunnymq/) to get started.
 * Automatic serialization and deserialization of Python objects
 * Automatic retry while publishing
 * Automatic handling of connection failures while consuming
-* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the details.
+* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](http://havefish.github.com/bunnymq/details.html).
 * Easy parallelization by starting multiple workers to share the load.
 
 
