@@ -54,3 +54,37 @@ This will raise an exception:
 Exception: The previous message was neither marked done nor requeued.
 ```
 The server needs to know what happened with the message you just pulled. This brings us to the topic of [consumer acknowledement](https://www.rabbitmq.com/confirms.html).
+
+### Consumer Acknowledgement
+The consumer processes the message once it pulls it off the queue. One of three things can happen
+
+1. Processing was sucessful and the message should be deleted
+2. Processing failed but not to be retried again and the message should be deleted
+3. Processing failed but it will be retired later and the message should be put back in the queue
+
+Inform RabbitMQ that the message should be deleted:
+
+```python
+>>> queue.task_done()
+```
+
+On the other hand, if you want to retry again:
+
+```python
+>>> queue.requeue()
+```
+
+Here is an example:
+
+```python
+>>> queue.get()
+'hello'
+>>> queue.task_done()
+
+>>> queue.get()
+{'a': 1}
+>>> queue.requeue()
+
+>>> queue.get() # some other consumer may get this message
+{'a': 1}
+```
