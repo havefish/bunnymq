@@ -28,7 +28,7 @@ Iterating over a queue indefinitely, waiting if nothing is available:
 ...     queue.task_done()
 ```
 
-Head over to the [tutorial](http://havefish.github.com/bunnymq/) to get started.
+Head over to the [tutorial](http://havefish.github.io/bunnymq/) to get started.
 
 ## Features
 
@@ -36,7 +36,7 @@ Head over to the [tutorial](http://havefish.github.com/bunnymq/) to get started.
 * Automatic serialization and deserialization of Python objects
 * Automatic retry while publishing
 * Automatic handling of connection failures while consuming
-* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](http://havefish.github.com/bunnymq/details.html).
+* Automatic handling of message redeliveries because of failure to send acknowledgement at the end of processing. This is a frequent scenario for long running consumer tasks. If you have encountered this problem, do read the [details](http://havefish.github.io/bunnymq/details.html).
 * Easy parallelization by starting multiple workers to share the load.
 
 
