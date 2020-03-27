@@ -29,9 +29,8 @@ class Queue:
         
         self.setup()
         
-        # registered callables
-        self._handler = None
-        self._error_handlers = []
+        # registered worker callable
+        self._worker = None
 
         # flags
         self._processing = False
@@ -87,27 +86,6 @@ class Queue:
         self.setup()
         func()
 
-    def on(self, event, *errors, requeue=True):
-        e = event.strip().lower()
-
-        if e == 'message':
-            return self._h
-
-        if e == 'error':
-            return self._errh(errors, requeue)
-
-        raise Exception(f"event must be one of {'message', 'error'}, given {e!r}")
-
-    def _h(self, func):
-        self._handler = func
-        return func
-    
-    def _errh(self, errors, requeue):
-        def wrapped(func):
-            self._error_handlers.append((errors, requeue, func))
-            return func
-        return wrapped   
-                
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
@@ -176,35 +154,13 @@ class Queue:
         while True:
             yield next(self)
 
-    def _handle_error(self, e, msg):
-        for errors, requeue, handler in self._error_handlers:
-            
-            if not isinstance(e, errors):
-                continue
-
-            log.debug(f'Error {e!r} is of type {errors!r}')
-                
-            handler(msg, e)
-            
-            if requeue:
-                self.requeue()
-            else:
-                self.task_done()
-            
-            return
-                
-        self.requeue()
-        raise e
+    def worker(self, func):
+        self._worker = func
+        return func
             
     def consume(self):
-        if self._handler is None:
-            raise Exception('consume needs a message handler')
+        if self._worker is None:
+            raise Exception('register a worker function')
 
         for msg in self:
-            try:
-                self._handler(msg)
-            except Exception as e:
-                log.debug(e)
-                self._handle_error(e, msg)
-            else:
-                self.task_done()
+            self._worker(msg)
