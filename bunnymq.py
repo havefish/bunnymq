@@ -21,18 +21,16 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, queue, serializer=pickle, username='guest', password='guest', **conn_params):
+    def __init__(self, queue, username='guest', password='guest', **conn_params):
         self.queue = queue
-        self.serializer = serializer
         
         self.credentials = pika.PlainCredentials(username, password)
         self.conn_params = conn_params
         
         self.setup()
         
-        # registered callables
-        self._handler = None
-        self._error_handlers = []
+        # registered worker callable
+        self._worker = None
 
         # flags
         self._processing = False
@@ -67,15 +65,18 @@ class Queue:
                 log.error(f'{e}, retrying in 2 secs.')
                 time.sleep(2)
         
-    def _put(self, msg, **kwargs):
-        body = self.serializer.dumps(msg)
-        properties = pika.BasicProperties(delivery_mode=2, **kwargs)
-        self.channel.basic_publish(exchange='', routing_key=self.queue, body=body, properties=properties)
+    def _put(self, msg, priority):
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=self.queue,
+            body=pickle.dumps(msg),
+            properties=pika.BasicProperties(delivery_mode=2, priority=priority),
+        )
         
-    def put(self, msg, priority=5, **kwargs):
+    def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
 
-        func = lambda: self._put(msg, priority=priority, **kwargs)
+        func = lambda: self._put(msg, priority=priority)
         
         try:
             return func()
@@ -85,27 +86,6 @@ class Queue:
         self.setup()
         func()
 
-    def on(self, event, *errors, requeue=True):
-        e = event.strip().lower()
-
-        if e == 'message':
-            return self._h
-
-        if e == 'error':
-            return self._errh(errors, requeue)
-
-        raise Exception(f"event must be one of {'message', 'error'}, given {e!r}")
-
-    def _h(self, func):
-        self._handler = func
-        return func
-    
-    def _errh(self, errors, requeue):
-        def wrapped(func):
-            self._error_handlers.append((errors, requeue, func))
-            return func
-        return wrapped   
-                
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
@@ -162,7 +142,7 @@ class Queue:
 
         self._processing = True
         self._last_msg_hash = self._msg_hash
-        return self.serializer.loads(self._body)
+        return pickle.loads(self._body)
 
     def __len__(self):
         return self._declare_queue().method.message_count
@@ -174,35 +154,13 @@ class Queue:
         while True:
             yield next(self)
 
-    def _handle_error(self, e, msg):
-        for errors, requeue, handler in self._error_handlers:
-            
-            if not isinstance(e, errors):
-                continue
-
-            log.debug(f'Error {e!r} is of type {errors!r}')
-                
-            handler(msg, e)
-            
-            if requeue:
-                self.requeue()
-            else:
-                self.task_done()
-            
-            return
-                
-        self.requeue()
-        raise e
+    def worker(self, func):
+        self._worker = func
+        return func
             
     def consume(self):
-        if self._handler is None:
-            raise Exception('consume needs a message handler')
+        if self._worker is None:
+            raise Exception('register a worker function')
 
         for msg in self:
-            try:
-                self._handler(msg)
-            except Exception as e:
-                log.debug(e)
-                self._handle_error(e, msg)
-            else:
-                self.task_done()
+            self._worker(msg)
