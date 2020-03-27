@@ -2,7 +2,7 @@
 
 Simple messaging with RabbitMQ and Python.
 
-The project is inspired by the Python standard library queue module and the [hotqueue](https://github.com/richardhenry/hotqueue) library. Primarily geared towards programmer happiness :slightly_smiling_face:
+This is a small library inspired by the Python standard library [queue](https://docs.python.org/3/library/queue.html) module and the [hotqueue](https://github.com/richardhenry/hotqueue) library. Primarily geared towards programmer happiness :slightly_smiling_face:
 
 Basic Usage:
 
