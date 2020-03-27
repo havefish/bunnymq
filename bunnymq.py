@@ -21,9 +21,8 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, queue, serializer=pickle, username='guest', password='guest', **conn_params):
+    def __init__(self, queue, username='guest', password='guest', **conn_params):
         self.queue = queue
-        self.serializer = serializer
         
         self.credentials = pika.PlainCredentials(username, password)
         self.conn_params = conn_params
@@ -68,9 +67,12 @@ class Queue:
                 time.sleep(2)
         
     def _put(self, msg, **kwargs):
-        body = self.serializer.dumps(msg)
-        properties = pika.BasicProperties(delivery_mode=2, **kwargs)
-        self.channel.basic_publish(exchange='', routing_key=self.queue, body=body, properties=properties)
+        self.channel.basic_publish(
+            exchange='',
+            routing_key=self.queue,
+            body=pickle.dumps(msg),
+            properties=pika.BasicProperties(delivery_mode=2),
+        )
         
     def put(self, msg, priority=5, **kwargs):
         assert 0 < int(priority) <  self.max_priority
@@ -162,7 +164,7 @@ class Queue:
 
         self._processing = True
         self._last_msg_hash = self._msg_hash
-        return self.serializer.loads(self._body)
+        return pickle.loads(self._body)
 
     def __len__(self):
         return self._declare_queue().method.message_count
