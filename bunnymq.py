@@ -21,8 +21,11 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, queue, username='guest', password='guest', **conn_params):
-        self.queue = queue
+    def __init__(self, name, username='guest', password='guest', **conn_params):
+        name = str(name).strip()
+        assert len(queue) < 200, f'Queue name too long: {name!}'
+
+        self.queue = name
         
         self.credentials = pika.PlainCredentials(username, password)
         self.conn_params = conn_params
