@@ -23,9 +23,9 @@ class Queue:
     
     def __init__(self, name, username='guest', password='guest', **conn_params):
         name = str(name).strip()
-        assert len(queue) < 200, f'Queue name too long: {name!}'
+        assert len(name) < 200, f'Queue name too long: {name!r}'
 
-        self.queue = name
+        self.queue = f'bunnymq.{name}'
         
         self.credentials = pika.PlainCredentials(username, password)
         self.conn_params = conn_params
