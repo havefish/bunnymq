@@ -21,14 +21,15 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, name, username='guest', password='guest', **conn_params):
+    def __init__(self, name, host='localhost', port=5672, username='guest', password='guest'):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
 
         self.queue = f'bunnymq.{name}'
-        
+
+        self.host = host
+        self.port = port
         self.credentials = pika.PlainCredentials(username, password)
-        self.conn_params = conn_params
         
         self.setup()
         
@@ -52,7 +53,7 @@ class Queue:
     def _setup(self):
         self.disconnect()
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(credentials=self.credentials, **self.conn_params))                                                
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(credentials=self.credentials, host=self.host, port=self.port))                                                
         self.channel = self.connection.channel()
 
         self._declare_queue()
