@@ -88,15 +88,13 @@ class Queue:
     def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
 
-        func = lambda: self._put(msg, priority=priority)
-        
         try:
-            return func()
+            return self._put(msg, priority=priority)
         except Errors as e:
             log.debug(e)
         
         self.setup()
-        func()
+        self._put(msg, priority=priority)
 
     def requeue(self):
         try:
