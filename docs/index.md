@@ -134,9 +134,9 @@ Once you have the consumer code ready (iterative or decorator version), you can 
 
 You can spawn as many workers as you need.
 
-# Misc
+## Misc
 
-## Redelivery Issues
+### Redelivery Issues
 
 Pika [recommends](https://www.rabbitmq.com/reliability.html#consumer-side) the consumers be designed to be idempotent.
 
