@@ -23,17 +23,25 @@ You can have one (or many) Python programs pushing to the queue using `Queue.put
 >>> queue.put({'a': 1})
 ```
 
-You can push more than one item onto the queue at once:
-
-```python
->>> queue.put(1, 2, None)
-```
-
 You can push any python object that can be [pickled](http://docs.python.org/library/pickle.html). For example:
 
 ```python
 >>> import datetime
 >>> queue.put(datetime.now())
+```
+
+You can indicate the **priority** of the item:
+```python
+>>> queue.put({'b': 1}, priority=8)
+```
+This item will be consumed before the ones with lower priority. The priority values range from 1 (low) through 10 (high). The default priority is 5.
+
+## Getting the Queue Size
+You can use the `len` function to find the number of items currently present in the queue
+
+```python
+>>> len(queue)
+8
 ```
 
 ## Getting Items off the Queue
