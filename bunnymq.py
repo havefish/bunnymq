@@ -74,6 +74,8 @@ class Queue:
             except Errors as e:
                 log.error(f'{e}, retrying in 2 secs.')
                 time.sleep(self.retry_interval)
+
+        raise Exception('Max retries exceeded.')
         
     def _put(self, msg, priority):
         self.channel.basic_publish(
