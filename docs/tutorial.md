@@ -88,3 +88,40 @@ Here is an example:
 >>> queue.get() # some other consumer may get this message
 {'a': 1}
 ```
+
+## Consuming a Queue
+The `Queue` object implements the iterable protocol, which means you can pull items off the queue as follows:
+
+```python
+>>> for item in queue:
+...     process(item)
+...     queue.task_done()  # <- do not forget
+```
+
+If there are no more items in the queue, this will block indefinitely.
+
+## Creating a Queue Worker 
+You can register any function of one argument as a worker, by using the decorator `Queue.worker`:
+
+```python
+@queue.worker
+def process(item):
+    print(item)
+```
+
+Then start the consumer with
+
+```python
+>>> queue.consume()
+```
+
+This will run the iteration internally.
+
+> The processing logic usually contains try/except to catch errors and decide wheather to mark it done or requeue. The decorator approach decreases one level of indentation resulting in somewhat more readable code.
+
+## Consuming in Parallel
+Once you have the consumer code ready (iterative or decorator version), you can start multiple of them, in different python processes. If your code is dockerized, using [docker-compose](https://docs.docker.com/compose/) makes this really straight forward.
+
+> :warning: **A `Queue` object must never be accessed by multiple threads. One worker per process, that's a rule, else bad things will happen.**
+
+You can spawn as many workers as you need.
