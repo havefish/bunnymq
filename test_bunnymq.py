@@ -13,6 +13,10 @@ class TestQueue(unittest.TestCase):
     def test_len_of_new_queue(self):
         self.assertEqual(len(self.queue), 0)
 
+    def test_put(self):
+        self.queue.put(1)
+        self.assertEqual(len(self.queue), 1)
+
     def test_get(self):
         self.queue.put(1)
         item = self.queue.get()
@@ -27,7 +31,6 @@ class TestQueue(unittest.TestCase):
 
     def test_task_done(self):
         self.queue.put(1)
-        self.assertEqual(len(self.queue), 1)
         self.queue.get()
         self.queue.task_done()
         self.assertEqual(len(self.queue), 0)
