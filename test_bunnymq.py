@@ -34,3 +34,9 @@ class TestQueue(unittest.TestCase):
         self.queue.get()
         self.queue.task_done()
         self.assertEqual(len(self.queue), 0)
+
+    def test_requeue(self):
+        self.queue.put(1)
+        item = self.queue.get()
+        self.queue.requeue()
+        self.assertEqual(self.queue.get(), item)
