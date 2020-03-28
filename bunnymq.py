@@ -64,6 +64,7 @@ class Queue:
 
         self._declare_queue()
         self.channel.basic_qos(prefetch_count=1)
+        self.channel.confirm_delivery()
 
         self.stream = self.channel.consume(self.queue)
 
@@ -83,6 +84,7 @@ class Queue:
             routing_key=self.queue,
             body=pickle.dumps(msg),
             properties=pika.BasicProperties(delivery_mode=2, priority=priority),
+            mandatory=True,
         )
         
     def put(self, msg, priority=5):
