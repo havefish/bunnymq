@@ -1,6 +1,6 @@
-"""Simple transparent wrapper for a small portion of Pika. It has a nice interface."""
+'''Simple messaging with RabbitMQ and Python.'''
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 import logging
 import pickle
