@@ -133,3 +133,17 @@ Once you have the consumer code ready (iterative or decorator version), you can 
 > :warning: **A `Queue` object must never be accessed by multiple threads. One worker per process, that's a rule, else bad things will happen.**
 
 You can spawn as many workers as you need.
+
+## Clearing the Queue
+
+To purge all the messages in the queue
+```python
+>>> queue.clear()
+```
+
+## Deleting the Queue
+
+To delete a queue
+```python
+>>> queue.delete()
+```
