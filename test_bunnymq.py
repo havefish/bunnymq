@@ -49,3 +49,17 @@ class TestQueue(unittest.TestCase):
         self.queue.put(1)
         it = iter(self.queue)
         self.assertEqual(next(it), 1)
+
+    def test_handle_ack_failure(self):
+        self.queue.put(1)
+        self.queue.put(2)
+
+        item = self.queue.get()
+        self.assertEqual(item, 1)
+
+        self.queue.disconnect()  # simulates a connection loss
+
+        self.queue.task_done()
+
+        item = self.queue.get()
+        self.assertEqual(item, 2)
