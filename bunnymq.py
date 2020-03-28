@@ -175,6 +175,14 @@ class Queue:
         for msg in self:
             self._worker(msg)
 
+    def clear(self):
+        try:
+            self.channel.queue_purge(queue=self.queue)
+        except Errors as e:
+            log.debug(e)
+            self.setup()
+            self.channel.queue_purge(queue=self.queue)
+
     def __del__(self):
         try:
             self.channel.queue_delete(queue=self.queue)
