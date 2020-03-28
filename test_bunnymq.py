@@ -44,3 +44,8 @@ class TestQueue(unittest.TestCase):
     def test_auto_setup(self):
         self.queue.disconnect()
         self.queue.put(1)
+
+    def test_iterable(self):
+        self.queue.put(1)
+        it = iter(self.queue)
+        self.assertEqual(next(it), 1)
