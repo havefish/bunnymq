@@ -62,4 +62,18 @@ class TestQueue(unittest.TestCase):
         self.queue.task_done()
 
         item = self.queue.get()
-        self.assertEqual(item, 2)
+        self.assertEqual(item, 2)  # 1 will be silently skipped
+
+    def test_handle_requeue_failure(self):
+        self.queue.put(1)
+        self.queue.put(2)
+
+        item = self.queue.get()
+        self.assertEqual(item, 1)
+
+        self.queue.disconnect()  # simulates a connection loss
+
+        self.queue.requeue()
+
+        item = self.queue.get()
+        self.assertEqual(item, 1)
