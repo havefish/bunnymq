@@ -24,3 +24,10 @@ class TestQueue(unittest.TestCase):
 
         with self.assertRaises(Exception):
             self.queue.get()
+
+    def test_task_done(self):
+        self.queue.put(1)
+        self.assertEqual(len(self.queue), 1)
+        self.queue.get()
+        self.queue.task_done()
+        self.assertEqual(len(self.queue), 1)
