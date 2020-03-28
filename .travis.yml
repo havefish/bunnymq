@@ -5,9 +5,7 @@ python:
   - '3.7'
   - '3.8'
 
-os: linux
-
-dist: trusty
+dist: bionic
 
 services:
   - rabbitmq
