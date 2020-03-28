@@ -16,6 +16,7 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(self.queue.queue, 'bunnymq.unittest')
         self.assertEqual(self.queue.host, 'localhost')
         self.assertEqual(self.queue.port, 5672)
+        self.assertEqual(self.queue.vhost, '/')
         self.assertEqual(self.queue.credentials, pika.PlainCredentials('guest', 'guest'))
         self.assertEqual(self.queue.max_retries, 100)
         self.assertEqual(self.queue.retry_interval, 5)

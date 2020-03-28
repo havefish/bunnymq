@@ -22,7 +22,7 @@ Errors = (
 class Queue:
     max_priority = 10
     
-    def __init__(self, name, host='localhost', port=5672, username='guest', password='guest', max_retries=100, retry_interval=5):
+    def __init__(self, name, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
 
@@ -30,6 +30,7 @@ class Queue:
 
         self.host = host
         self.port = port
+        self.vhost = vhost
         self.credentials = pika.PlainCredentials(username, password)
 
         self.max_retries = int(max_retries)
@@ -60,7 +61,8 @@ class Queue:
     def _setup(self):
         self.disconnect()
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(credentials=self.credentials, host=self.host, port=self.port))                                                
+        parameters = pika.ConnectionParameters(credentials=self.credentials, host=self.host, port=self.port, virtual_host=self.vhost)
+        self.connection = pika.BlockingConnection(parameters=parameters)                                                
         self.channel = self.connection.channel()
 
         self._declare_queue()
