@@ -5,6 +5,9 @@ python:
   - '3.7'
   - '3.8'
 
+services:
+  - rabbitmq
+
 install:
   - pip install pika
 
