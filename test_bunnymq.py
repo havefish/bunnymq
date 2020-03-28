@@ -40,3 +40,7 @@ class TestQueue(unittest.TestCase):
         item = self.queue.get()
         self.queue.requeue()
         self.assertEqual(self.queue.get(), item)
+
+    def test_auto_setup(self):
+        self.queue.disconnect()
+        self.queue.put(1)
