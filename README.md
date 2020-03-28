@@ -6,6 +6,8 @@
 
 Simple messaging with RabbitMQ and Python.
 
+Head over to the [tutorial](http://havefish.github.io/bunnymq/) to get started.
+
 This is a small library inspired by the Python standard library [queue](https://docs.python.org/3/library/queue.html) module and the [hotqueue](https://github.com/richardhenry/hotqueue) library. Primarily geared towards programmer happiness :slightly_smiling_face:
 
 Basic Usage:
@@ -33,8 +35,6 @@ Iterating over a queue indefinitely, waiting if nothing is available:
 ...     print(item)
 ...     queue.task_done()
 ```
-
-Head over to the [tutorial](http://havefish.github.io/bunnymq/) to get started.
 
 ## Features
 
