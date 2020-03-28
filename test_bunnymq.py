@@ -1,4 +1,5 @@
 import unittest
+import pika
 
 from bunnymq import Queue
 
@@ -10,8 +11,23 @@ class TestQueue(unittest.TestCase):
     def tearDown(self):
         self.queue.delete()
 
-    def test_queue_name(self):
+    def test_init(self):
         self.assertEqual(self.queue.queue, 'bunnymq.unittest')
+        self.assertEqual(self.queue.host, 'localhost')
+        self.assertEqual(self.queue.port, 5672)
+        self.assertEqual(self.queue.credentials, pika.PlainCredentials('guest', 'guest'))
+        self.assertEqual(self.queue.max_retries, 100)
+        self.assertEqual(self.queue.retry_interval, 5)
+
+    def test_bad_init(self):
+        with self.assertRaises(AssertionError):
+            Queue('badinput'*500)
+            Queue('badinput', max_retries=-1)
+            Queue('badinput', retry_interval=-1)
+
+        with self.assertRaises(ValueError):
+            Queue('badinput', max_retries='x')
+            Queue('badinput', retry_interval='x')
 
     def test_len_of_new_queue(self):
         self.assertEqual(len(self.queue), 0)
