@@ -17,3 +17,10 @@ class TestQueue(unittest.TestCase):
         self.queue.put(1)
         item = self.queue.get()
         self.assertEqual(item, 1)
+
+    def test_get_raises(self):
+        self.queue.put(1)
+        self.queue.get()
+
+        with self.assertRaises(Exception):
+            self.queue.get()
