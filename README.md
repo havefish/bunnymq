@@ -1,5 +1,7 @@
 # BunnyMQ
 
+[![Build Status](https://travis-ci.com/havefish/bunnymq.svg?branch=master)](https://travis-ci.com/havefish/bunnymq)
+
 Simple messaging with RabbitMQ and Python.
 
 This is a small library inspired by the Python standard library [queue](https://docs.python.org/3/library/queue.html) module and the [hotqueue](https://github.com/richardhenry/hotqueue) library. Primarily geared towards programmer happiness :slightly_smiling_face:
