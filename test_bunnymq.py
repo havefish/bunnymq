@@ -77,3 +77,10 @@ class TestQueue(unittest.TestCase):
 
         item = self.queue.get()
         self.assertEqual(item, 1)
+
+    def test_clear(self):
+        self.queue.put(1)
+        self.assertEqual(len(self.queue), 1)
+
+        self.queue.clear()
+        self.assertEqual(len(self.queue), 0)
