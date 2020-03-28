@@ -8,11 +8,12 @@ class TestQueue(unittest.TestCase):
         self.queue = Queue('unittest')
 
     def tearDown(self):
-        del self.queue
+        self.queue.delete()
 
     def test_len_of_new_queue(self):
         self.assertEqual(len(self.queue), 0)
 
-    def test_put(self):
+    def test_get(self):
         self.queue.put(1)
-        self.assertEqual(len(self.queue), 1)
+        item = self.queue.get()
+        self.assertEqual(item, 1)

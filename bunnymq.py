@@ -183,7 +183,7 @@ class Queue:
             self.setup()
             self.channel.queue_purge(queue=self.queue)
 
-    def __del__(self):
+    def delete(self):
         try:
             self.channel.queue_delete(queue=self.queue)
         except Errors as e:
