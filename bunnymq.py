@@ -190,3 +190,5 @@ class Queue:
             log.debug(e)
             self.setup()
             self.channel.queue_delete(queue=self.queue)
+
+        self.disconnect()
