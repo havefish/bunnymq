@@ -1,4 +1,5 @@
 import unittest
+
 import pika
 
 from bunnymq import Queue
@@ -95,7 +96,7 @@ class TestQueue(unittest.TestCase):
         self.queue.requeue()
 
         item = self.queue.get()
-        self.assertEqual(item, 1)
+        self.assertEqual(item, 1)  # 1 was explicitly requeued, hecne redelivered
 
     def test_clear(self):
         self.queue.put(1)
