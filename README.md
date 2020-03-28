@@ -1,6 +1,8 @@
 # BunnyMQ
 
 [![Build Status](https://travis-ci.com/havefish/bunnymq.svg?branch=master)](https://travis-ci.com/havefish/bunnymq)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/bunnymq/)
+[![PyPI version fury.io](https://badge.fury.io/py/ansicolortags.svg)](https://pypi.python.org/pypi/bunnymq/)
 
 Simple messaging with RabbitMQ and Python.
 
