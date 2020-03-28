@@ -10,6 +10,9 @@ class TestQueue(unittest.TestCase):
     def tearDown(self):
         self.queue.delete()
 
+    def test_queue_name(self):
+        self.assertEqual(self.queue.queue, 'bunnymq.unittest')
+
     def test_len_of_new_queue(self):
         self.assertEqual(len(self.queue), 0)
 
