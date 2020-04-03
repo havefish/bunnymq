@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 Errors = (
+    pika.exceptions.StreamLostError,
     pika.exceptions.ConnectionClosed,
     pika.exceptions.ChannelClosed,
     pika.exceptions.ChannelWrongStateError,
