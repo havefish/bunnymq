@@ -97,7 +97,7 @@ class Queue:
         try:
             return self._put(msg, priority=priority)
         except Errors as e:
-            log.debug(e)
+            log.error(f'{e}, retrying ...')
         
         self.setup()
         self._put(msg, priority=priority)
@@ -106,7 +106,7 @@ class Queue:
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
         except Errors as e:
-            log.debug(e)
+            log.error(f'{e}, retrying ...')
             self.setup()
 
         self._processing = False
@@ -116,7 +116,7 @@ class Queue:
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
         except Errors as e:
-            log.debug(e)
+            log.error(f'{e}, retrying ...')
             self.setup()
 
         self._processing = False
@@ -185,7 +185,7 @@ class Queue:
         try:
             self.channel.queue_purge(queue=self.queue)
         except Errors as e:
-            log.debug(e)
+            log.error(f'{e}, retrying ...')
             self.setup()
             self.channel.queue_purge(queue=self.queue)
 
@@ -193,7 +193,7 @@ class Queue:
         try:
             self.channel.queue_delete(queue=self.queue)
         except Errors as e:
-            log.debug(e)
+            log.error(f'{e}, retrying ...')
             self.setup()
             self.channel.queue_delete(queue=self.queue)
 
