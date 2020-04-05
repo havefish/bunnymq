@@ -12,13 +12,6 @@ import pika
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-Errors = (
-    pika.exceptions.StreamLostError,
-    pika.exceptions.ConnectionClosed,
-    pika.exceptions.ChannelClosed,
-    pika.exceptions.ChannelWrongStateError,
-)
-
 
 class Queue:
     max_priority = 10
@@ -76,7 +69,7 @@ class Queue:
         for _ in range(self.max_retries):
             try:
                 return self._setup()
-            except Errors as e:
+            except pika.exceptions.AMQPError as e:
                 log.error(f'{e}, retrying in 2 secs.')
                 time.sleep(self.retry_interval)
 
@@ -96,7 +89,7 @@ class Queue:
 
         try:
             return self._put(msg, priority=priority)
-        except Errors as e:
+        except pika.exceptions.AMQPError as e:
             log.error(f'{e}, retrying ...')
         
         self.setup()
@@ -105,7 +98,7 @@ class Queue:
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
-        except Errors as e:
+        except pika.exceptions.AMQPError as e:
             log.error(f'{e}, retrying ...')
             self.setup()
 
@@ -115,7 +108,7 @@ class Queue:
     def task_done(self):
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
-        except Errors as e:
+        except pika.exceptions.AMQPError as e:
             log.error(f'{e}, retrying ...')
             self.setup()
 
@@ -184,7 +177,7 @@ class Queue:
     def clear(self):
         try:
             self.channel.queue_purge(queue=self.queue)
-        except Errors as e:
+        except pika.exceptions.AMQPError as e:
             log.error(f'{e}, retrying ...')
             self.setup()
             self.channel.queue_purge(queue=self.queue)
@@ -192,7 +185,7 @@ class Queue:
     def delete(self):
         try:
             self.channel.queue_delete(queue=self.queue)
-        except Errors as e:
+        except pika.exceptions.AMQPError as e:
             log.error(f'{e}, retrying ...')
             self.setup()
             self.channel.queue_delete(queue=self.queue)
