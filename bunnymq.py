@@ -14,6 +14,7 @@ log.addHandler(logging.NullHandler())
 
 class Queue:
     max_priority = 10
+    heartbeat_interval = 600  # 10 min, default 1 min is too low
     
     def __init__(self, name, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
         name = str(name).strip()
@@ -52,7 +53,12 @@ class Queue:
     def _setup(self):
         self.disconnect()
 
-        parameters = pika.ConnectionParameters(credentials=self.credentials, host=self.host, port=self.port, virtual_host=self.vhost)
+        parameters = pika.ConnectionParameters(
+            credentials=self.credentials,
+            host=self.host, port=self.port,
+            virtual_host=self.vhost,
+            heartbeat=600,
+        )
         self.connection = pika.BlockingConnection(parameters=parameters)                                                
         self.channel = self.connection.channel()
 
