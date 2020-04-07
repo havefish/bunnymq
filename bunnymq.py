@@ -57,7 +57,7 @@ class Queue:
             credentials=self.credentials,
             host=self.host, port=self.port,
             virtual_host=self.vhost,
-            heartbeat=600,
+            heartbeat=self.heartbeat_interval,
         )
         self.connection = pika.BlockingConnection(parameters=parameters)                                                
         self.channel = self.connection.channel()
