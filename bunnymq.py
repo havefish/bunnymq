@@ -1,6 +1,6 @@
 '''Simple messaging with RabbitMQ and Python.'''
 
-__version__ = '0.0.10'
+__version__ = '0.0.11'
 
 import logging
 import pickle
