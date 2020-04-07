@@ -39,8 +39,6 @@ class Queue:
 
         # flags
         self._processing = False
-        self._last_msg_hash = None
-        self._requeued = False
         
     def disconnect(self):
         try:
@@ -102,7 +100,6 @@ class Queue:
             self.setup()
 
         self._processing = False
-        self._requeued = True
 
     def task_done(self):
         try:
@@ -112,7 +109,6 @@ class Queue:
             self.setup()
 
         self._processing = False
-        self._requeued = False
 
     def __next__(self):
         if self._processing:
@@ -125,6 +121,7 @@ class Queue:
             r = next(self.stream)
 
         self._method, _, body = r
+        self._processing = True
         return pickle.loads(body)
 
     def __len__(self):
