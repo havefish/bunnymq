@@ -71,34 +71,6 @@ class TestQueue(unittest.TestCase):
         it = iter(self.queue)
         self.assertEqual(next(it), 1)
 
-    def test_handle_ack_failure(self):
-        self.queue.put(1)
-        self.queue.put(2)
-
-        item = self.queue.get()
-        self.assertEqual(item, 1)
-
-        self.queue.disconnect()  # simulates a connection loss
-
-        self.queue.task_done()
-
-        item = self.queue.get()
-        self.assertEqual(item, 2)  # 1 will be silently skipped
-
-    def test_handle_requeue_failure(self):
-        self.queue.put(1)
-        self.queue.put(2)
-
-        item = self.queue.get()
-        self.assertEqual(item, 1)
-
-        self.queue.disconnect()  # simulates a connection loss
-
-        self.queue.requeue()
-
-        item = self.queue.get()
-        self.assertEqual(item, 1)  # 1 was explicitly requeued, hecne redelivered
-
     def test_clear(self):
         self.queue.put(1)
         self.assertEqual(len(self.queue), 1)

@@ -5,7 +5,6 @@ __version__ = '0.0.9'
 import logging
 import pickle
 import time
-from hashlib import md5
 
 import pika
 
@@ -40,8 +39,6 @@ class Queue:
 
         # flags
         self._processing = False
-        self._last_msg_hash = None
-        self._requeued = False
         
     def disconnect(self):
         try:
@@ -103,7 +100,6 @@ class Queue:
             self.setup()
 
         self._processing = False
-        self._requeued = True
 
     def task_done(self):
         try:
@@ -113,11 +109,8 @@ class Queue:
             self.setup()
 
         self._processing = False
-        self._requeued = False
 
-    def _move_ahead(self):
-        log.debug('Moving ahead')
-
+    def __next__(self):
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
@@ -127,31 +120,9 @@ class Queue:
             self.setup()
             r = next(self.stream)
 
-        self._method, _, self._body = r
-
-    @property
-    def _msg_hash(self):
-        return md5(self._body).hexdigest()
-
-    @property
-    def _got_old_msg(self):
-        return all([
-            self._method.redelivered,
-            self._msg_hash == self._last_msg_hash,
-            not self._requeued,  # an explicitly requeued message is considered new
-        ])
-
-    def __next__(self):
-        self._move_ahead()
-
-        if self._got_old_msg:
-            log.debug('Got old message')
-            self.task_done()
-            self._move_ahead()
-
+        self._method, _, body = r
         self._processing = True
-        self._last_msg_hash = self._msg_hash
-        return pickle.loads(self._body)
+        return pickle.loads(body)
 
     def __len__(self):
         return self._declare_queue().method.message_count
