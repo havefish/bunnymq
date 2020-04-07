@@ -73,7 +73,7 @@ class Queue:
             try:
                 return self._setup()
             except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying in 2 secs.')
+                log.error(f'{e}, retrying in {self.retry_interval} secs.')
                 time.sleep(self.retry_interval)
 
         raise Exception('Max retries exceeded.')
