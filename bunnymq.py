@@ -16,11 +16,12 @@ class Queue:
     max_priority = 10
     heartbeat_interval = 600  # 10 min, default 1 min is too low
     
-    def __init__(self, name, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
+    def __init__(self, name, serializer=pickle, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
-
         self.queue = f'bunnymq.{name}'
+
+        self.serializer = serializer
 
         self.host = host
         self.port = port
@@ -82,7 +83,7 @@ class Queue:
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queue,
-            body=pickle.dumps(msg),
+            body=self.serializer.dumps(msg) if self.serializer is not None else msg,
             properties=pika.BasicProperties(delivery_mode=2, priority=priority),
             mandatory=True,
         )
@@ -128,7 +129,7 @@ class Queue:
 
         self._method, _, body = r
         self._processing = True
-        return pickle.loads(body, errors='ignore')
+        return self.serializer.loads(body) if self.serializer is not None else body
 
     def __len__(self):
         return self._declare_queue().method.message_count
