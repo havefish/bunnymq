@@ -1,8 +1,9 @@
 import unittest
+import json
 
 import pika
 
-from bunnymq import Queue
+from bunnymq import Queue, pickle
 
 
 class TestQueue(unittest.TestCase):
@@ -14,6 +15,7 @@ class TestQueue(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.queue.queue, 'bunnymq.unittest')
+        self.assertEqual(self.queue.serializer, pickle)
         self.assertEqual(self.queue.host, 'localhost')
         self.assertEqual(self.queue.port, 5672)
         self.assertEqual(self.queue.vhost, '/')
@@ -77,3 +79,18 @@ class TestQueue(unittest.TestCase):
 
         self.queue.clear()
         self.assertEqual(len(self.queue), 0)
+
+    def test_json_serializer(self):
+        self.queue.serializer = json
+        item = {'a': 1}
+        self.queue.put(item)
+        self.assertEqual(self.queue.get(), item)
+
+    def test_no_serializer(self):
+        self.queue.serializer = None
+
+        self.queue.put('hello')
+        self.assertEqual(self.queue.get(), b'hello')
+
+        with self.assertRaises(TypeError):
+            self.queue.put(1)
