@@ -128,7 +128,7 @@ class Queue:
 
         self._method, _, body = r
         self._processing = True
-        return pickle.loads(body)
+        return pickle.loads(body, errors='ignore')
 
     def __len__(self):
         return self._declare_queue().method.message_count
