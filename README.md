@@ -40,6 +40,7 @@ Iterating over a queue indefinitely, waiting if nothing is available:
 
 * Simple usage
 * Automatic serialization and deserialization of Python objects
+* Adding custom serializers or turning serialization off is trivial
 * Automatic retry while publishing
 * Automatic handling of connection failures while consuming
 * Easy parallelization by starting multiple workers to share the load.

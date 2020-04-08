@@ -30,6 +30,8 @@ You can push any python object that can be [pickled](http://docs.python.org/libr
 >>> queue.put(datetime.now())
 ```
 
+If you want to turn off serialization or change the serializer from `pickle` to something else e.g. `json`, refer [this section](#custom-serializer).
+
 You can indicate the **priority** of the item:
 ```python
 >>> queue.put({'b': 1}, priority=8)
@@ -147,3 +149,24 @@ To delete a queue
 ```python
 >>> queue.delete()
 ```
+
+## Custom Serializer
+You can change the default `pickle` serializer easily. You can turn off
+serialization as follows:
+```python
+>>> queue = Queue('test', serializer=None)
+```
+
+Any object that implements the following two methods can work as a serializer:
+
+1. `dumps`, takes an object and returns `str/bytes`
+2. `loads`, takes a `bytes` object
+
+For example, the standard library `json` module would be a drop in replacement.
+
+```python
+>>> import json
+>>> queue = Queue('test', serializer=json)
+```
+
+> When using custom serializers make sure that both producer and consumers are using the same serializer.
