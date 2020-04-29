@@ -84,6 +84,11 @@ On the other hand, if you want to retry again:
 >>> queue.requeue()
 ```
 
+You can optionally specify a priority while requeuing,
+```python
+>>> queue.requeue(priority=3)
+```
+
 Here is an example:
 
 ```python
