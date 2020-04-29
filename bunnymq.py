@@ -127,18 +127,7 @@ class Queue:
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
-        for _ in range(self.max_retries):
-            try:
-                r = next(self.stream)
-            except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying')
-                self.setup()
-            else:
-                break
-        else:
-            raise Exception('Max retries exceeded.')
-
-        self._method, _, body = r
+        self._method, _, body = self._setup_retry(next, self.stream)
         self._processing = True
         return self.serializer.loads(body) if self.serializer is not None else body
 
