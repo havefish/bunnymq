@@ -29,11 +29,9 @@ class TestQueue(unittest.TestCase):
         with self.assertRaises(AssertionError):
             Queue('badinput'*500)
             Queue('badinput', max_retries=-1)
-            Queue('badinput', retry_interval=-1)
 
         with self.assertRaises(ValueError):
             Queue('badinput', max_retries='x')
-            Queue('badinput', retry_interval='x')
 
     def test_len_of_new_queue(self):
         self.assertEqual(len(self.queue), 0)
