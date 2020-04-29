@@ -74,12 +74,13 @@ class Queue:
     def setup(self):
         for _ in range(self.max_retries):
             try:
-                return self._setup()
+                self._setup()
             except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying in {self.retry_interval} secs.')
-                time.sleep(self.retry_interval)
-
-        raise Exception('Max retries exceeded.')
+                log.error(f'{e}, retrying')
+            else:
+                break
+        else:
+            raise Exception('Max retries exceeded.')
         
     def _put(self, msg, priority):
         self.channel.basic_publish(
@@ -95,18 +96,20 @@ class Queue:
 
         for _ in range(self.max_retries):
             try:
-                self._setup()
-                return self._put(msg, priority=priority)
+                self._put(msg, priority=priority)
             except pika.exceptions.AMQPError as e:
                 log.error(f'{e}, retrying')
-
-        raise Exception('Max retries exceeded.')
+                self.setup()
+            else:
+                break
+        else:
+            raise Exception('Max retries exceeded.')
 
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
         except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
+            log.error(e)
             self.setup()
 
         self._processing = False
@@ -115,7 +118,7 @@ class Queue:
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
         except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
+            log.error(e)
             self.setup()
 
         self._processing = False
@@ -124,11 +127,16 @@ class Queue:
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
-        try:
-            r = next(self.stream)
-        except StopIteration:
-            self.setup()
-            r = next(self.stream)
+        for _ in range(self.max_retries):
+            try:
+                r = next(self.stream)
+            except pika.exceptions.AMQPError as e:
+                log.error(f'{e}, retrying')
+                self.setup()
+            else:
+                break
+        else:
+            raise Exception('Max retries exceeded.')
 
         self._method, _, body = r
         self._processing = True
@@ -156,19 +164,27 @@ class Queue:
             self._worker(msg)
 
     def clear(self):
-        try:
-            self.channel.queue_purge(queue=self.queue)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-            self.setup()
-            self.channel.queue_purge(queue=self.queue)
+        for _ in range(self.max_retries):
+            try:
+                self.channel.queue_purge(queue=self.queue)
+            except pika.exceptions.AMQPError as e:
+                log.error(f'{e}, retrying')
+                self.setup()
+            else:
+                break
+        else:
+            raise Exception('Max retries exceeded.')
 
     def delete(self):
-        try:
-            self.channel.queue_delete(queue=self.queue)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-            self.setup()
-            self.channel.queue_delete(queue=self.queue)
+        for _ in range(self.max_retries):
+            try:
+                self.channel.queue_delete(queue=self.queue)
+            except pika.exceptions.AMQPError as e:
+                log.error(f'{e}, retrying')
+                self.setup()
+            else:
+                break
+        else:
+            raise Exception('Max retries exceeded.')
 
         self.disconnect()
