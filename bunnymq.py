@@ -88,12 +88,9 @@ class Queue:
         assert 0 < int(priority) <  self.max_priority
         self._setup_retry(self._put, msg, priority=priority)
 
-    def requeue(self):
-        try:
-            self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
-        except pika.exceptions.AMQPError as e:
-            log.error(e)
-            self.setup()
+    def requeue(self, priority=5):
+        self.task_done()
+        self.put(self._msg, priority=priority)
 
         self._processing = False
 
@@ -112,7 +109,9 @@ class Queue:
 
         self._method, _, body = self._setup_retry(next, self.stream)
         self._processing = True
-        return self.serializer.loads(body) if self.serializer is not None else body
+        self._msg = self.serializer.loads(body) if self.serializer is not None else body
+
+        return self._msg
 
     def __len__(self):
         return self._declare_queue().method.message_count
