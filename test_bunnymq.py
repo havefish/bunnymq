@@ -23,6 +23,9 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(self.queue.max_retries, 100)
         self.assertEqual(self.queue.retry_interval, 5)
 
+    def test_repr(self):
+        self.assertEqual(repr(self.queue), "Queue('bunnymq.unittest', host='localhost', port=5672, vhost='/')")
+
     def test_bad_init(self):
         with self.assertRaises(AssertionError):
             Queue('badinput'*500)

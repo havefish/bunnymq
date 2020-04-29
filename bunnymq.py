@@ -43,7 +43,10 @@ class Queue:
 
         # flags
         self._processing = False
-        
+
+    def __repr__(self):
+        return f'Queue({self.queue!r}, host={self.host!r}, port={self.port!r}, vhost={self.vhost!r})'
+
     def disconnect(self):
         try:
             self.connection.close()
