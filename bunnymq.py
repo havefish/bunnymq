@@ -18,7 +18,7 @@ class Queue:
     max_priority = 10
     heartbeat_interval = 600  # 10 min, default 1 min is too low
     
-    def __init__(self, name, serializer=pickle, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
+    def __init__(self, name, serializer=pickle, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
         self.queue = f'bunnymq.{name}'
@@ -33,9 +33,6 @@ class Queue:
         self.max_retries = int(max_retries)
         assert self.max_retries > 0, f'max retries should be > 0, given {self.max_retries!r} times'
 
-        self.retry_interval = int(retry_interval)
-        assert self.retry_interval > 0, f'retry interval should be > 0, given {self.retry_interval!r} sec'
-        
         self.setup()
         
         # registered worker callable
