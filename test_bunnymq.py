@@ -40,6 +40,11 @@ class TestQueue(unittest.TestCase):
         self.queue.put(1)
         self.assertEqual(len(self.queue), 1)
 
+    def test_put_if_disconnected(self):
+        self.queue.disconnect()
+        self.queue.put(1)
+        self.assertEqual(len(self.queue), 1)
+
     def test_get(self):
         self.queue.put(1)
         item = self.queue.get()
