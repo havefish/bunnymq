@@ -72,15 +72,7 @@ class Queue:
         self.stream = self.channel.consume(self.queue)
 
     def setup(self):
-        for _ in range(self.max_retries):
-            try:
-                self._setup()
-            except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying')
-            else:
-                break
-        else:
-            raise Exception('Max retries exceeded.')
+        self._retry(self._setup)
         
     def _put(self, msg, priority):
         self.channel.basic_publish(
