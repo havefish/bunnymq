@@ -57,6 +57,7 @@ class Queue:
         return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
 
     def _setup(self):
+        log.info(f'Setting up {self!r}')
         self.disconnect()
 
         parameters = pika.ConnectionParameters(
