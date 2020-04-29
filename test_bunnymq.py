@@ -21,7 +21,9 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(self.queue.vhost, '/')
         self.assertEqual(self.queue.credentials, pika.PlainCredentials('guest', 'guest'))
         self.assertEqual(self.queue.max_retries, 100)
-        self.assertEqual(self.queue.retry_interval, 5)
+
+    def test_repr(self):
+        self.assertEqual(repr(self.queue), "Queue('bunnymq.unittest', host='localhost', port=5672, vhost='/')")
 
     def test_bad_init(self):
         with self.assertRaises(AssertionError):
@@ -37,6 +39,11 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(len(self.queue), 0)
 
     def test_put(self):
+        self.queue.put(1)
+        self.assertEqual(len(self.queue), 1)
+
+    def test_put_if_disconnected(self):
+        self.queue.disconnect()
         self.queue.put(1)
         self.assertEqual(len(self.queue), 1)
 

@@ -11,12 +11,14 @@ import pika
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
+logging.getLogger('pika').setLevel(logging.CRITICAL)
+
 
 class Queue:
     max_priority = 10
     heartbeat_interval = 600  # 10 min, default 1 min is too low
     
-    def __init__(self, name, serializer=pickle, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100, retry_interval=5):
+    def __init__(self, name, serializer=pickle, host='localhost', port=5672, vhost='/', username='guest', password='guest', max_retries=100):
         name = str(name).strip()
         assert len(name) < 200, f'Queue name too long: {name!r}'
         self.queue = f'bunnymq.{name}'
@@ -31,9 +33,6 @@ class Queue:
         self.max_retries = int(max_retries)
         assert self.max_retries > 0, f'max retries should be > 0, given {self.max_retries!r} times'
 
-        self.retry_interval = int(retry_interval)
-        assert self.retry_interval > 0, f'retry interval should be > 0, given {self.retry_interval!r} sec'
-        
         self.setup()
         
         # registered worker callable
@@ -41,7 +40,10 @@ class Queue:
 
         # flags
         self._processing = False
-        
+
+    def __repr__(self):
+        return f'Queue({self.queue!r}, host={self.host!r}, port={self.port!r}, vhost={self.vhost!r})'
+
     def disconnect(self):
         try:
             self.connection.close()
@@ -52,6 +54,7 @@ class Queue:
         return self.channel.queue_declare(self.queue, durable=True, arguments={'x-max-priority': self.max_priority})
 
     def _setup(self):
+        log.info(f'Setting up {self!r}')
         self.disconnect()
 
         parameters = pika.ConnectionParameters(
@@ -70,14 +73,7 @@ class Queue:
         self.stream = self.channel.consume(self.queue)
 
     def setup(self):
-        for _ in range(self.max_retries):
-            try:
-                return self._setup()
-            except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying in {self.retry_interval} secs.')
-                time.sleep(self.retry_interval)
-
-        raise Exception('Max retries exceeded.')
+        self._retry(self._setup)
         
     def _put(self, msg, priority):
         self.channel.basic_publish(
@@ -90,20 +86,13 @@ class Queue:
         
     def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
-
-        try:
-            return self._put(msg, priority=priority)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-        
-        self.setup()
-        self._put(msg, priority=priority)
+        self._setup_retry(self._put, msg, priority=priority)
 
     def requeue(self):
         try:
             self.channel.basic_reject(delivery_tag=self._method.delivery_tag, requeue=True)
         except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
+            log.error(e)
             self.setup()
 
         self._processing = False
@@ -112,7 +101,7 @@ class Queue:
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
         except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
+            log.error(e)
             self.setup()
 
         self._processing = False
@@ -121,13 +110,7 @@ class Queue:
         if self._processing:
             raise Exception('The previous message was neither marked done nor requeued.')
 
-        try:
-            r = next(self.stream)
-        except StopIteration:
-            self.setup()
-            r = next(self.stream)
-
-        self._method, _, body = r
+        self._method, _, body = self._setup_retry(next, self.stream)
         self._processing = True
         return self.serializer.loads(body) if self.serializer is not None else body
 
@@ -153,19 +136,22 @@ class Queue:
             self._worker(msg)
 
     def clear(self):
-        try:
-            self.channel.queue_purge(queue=self.queue)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-            self.setup()
-            self.channel.queue_purge(queue=self.queue)
+        self._setup_retry(self.channel.queue_purge, queue=self.queue)
 
     def delete(self):
-        try:
-            self.channel.queue_delete(queue=self.queue)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-            self.setup()
-            self.channel.queue_delete(queue=self.queue)
-
+        self._setup_retry(self.channel.queue_delete, queue=self.queue)
         self.disconnect()
+
+    def _retry(self, func, *args, _onerr=None, **kwargs):
+        for _ in range(self.max_retries):
+            try:
+                return func(*args, **kwargs)
+            except pika.exceptions.AMQPError as e:
+                log.error(f'{e}, retrying')
+                _e = e
+                _onerr and _onerr()
+
+        raise Exception(f'Max retries exceeded.\n{_e}')
+
+    def _setup_retry(self, func, *args, **kwargs):
+        return self._retry(func, *args, _onerr=self.setup, **kwargs)
