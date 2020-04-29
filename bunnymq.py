@@ -11,6 +11,8 @@ import pika
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
+logging.getLogger('pika').setLevel('critical')
+
 
 class Queue:
     max_priority = 10
