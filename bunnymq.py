@@ -149,12 +149,15 @@ class Queue:
         self._setup_retry(self.channel.queue_delete, queue=self.queue)
         self.disconnect()
 
-    def _setup_retry(self, func, *args, **kwargs):
+    def _retry(self, func, *args, _onerr=None, **kwargs):
         for _ in range(self.max_retries):
             try:
                 return func(*args, **kwargs)
             except pika.exceptions.AMQPError as e:
                 log.error(f'{e}, retrying')
-                self.setup()
+                _onerr and _onerr()
 
         raise Exception('Max retries exceeded.')
+
+    def _setup_retry(self, func, *args, **kwargs):
+        return self._retry(func, *args, _onerr=self.setup, **kwargs)
