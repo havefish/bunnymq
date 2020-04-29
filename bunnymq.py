@@ -164,16 +164,7 @@ class Queue:
             self._worker(msg)
 
     def clear(self):
-        for _ in range(self.max_retries):
-            try:
-                self.channel.queue_purge(queue=self.queue)
-            except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying')
-                self.setup()
-            else:
-                break
-        else:
-            raise Exception('Max retries exceeded.')
+        self._setup_retry(self.channel.queue_purge, queue=self.queue)
 
     def delete(self):
         self._setup_retry(self.channel.queue_delete, queue=self.queue)
