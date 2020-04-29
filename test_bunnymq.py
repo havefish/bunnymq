@@ -1,9 +1,9 @@
-import unittest
 import json
+import unittest
 
 import pika
 
-from bunnymq import Queue, pickle
+from bunnymq import DumpError, Queue, pickle
 
 
 class TestQueue(unittest.TestCase):
@@ -97,5 +97,5 @@ class TestQueue(unittest.TestCase):
         self.queue.put('hello')
         self.assertEqual(self.queue.get(), b'hello')
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(DumpError):
             self.queue.put(1)

@@ -91,12 +91,15 @@ class Queue:
 
     def _dump(self, msg):
         if not self.serializer:
-            return msg
+            if isinstance(msg, (str, bytes)):
+                return msg
+            else:
+                raise DumpError(f'can put only str/bytes without serialization, got {type(msg)}')
 
         try:
             return self.serializer.dumps(msg)
         except Exception as e:
-            raise DumpError(e)
+            raise DumpError(e) from None
 
     def _load(self, body):
         if not self.serializer:
@@ -105,7 +108,7 @@ class Queue:
         try:
             return self.serializer.loads(body)
         except Exception as e:
-            raise LoadError(e)
+            raise LoadError(e) from None
 
     def setup(self):
         self._retry(self._setup)
@@ -124,7 +127,9 @@ class Queue:
         self._setup_retry(self._put, msg, priority=priority)
 
     def requeue(self, priority=5):
-        self.task_done()
+        if self._processing:
+            self.task_done()
+
         self.put(self._msg, priority=priority)
 
         self._processing = False
@@ -132,7 +137,7 @@ class Queue:
     def task_done(self):
         try:
             self.channel.basic_ack(delivery_tag=self._method.delivery_tag)
-        except pika.exceptions.AMQPError as e:
+        except Exception as e:
             log.error(e)
             self.setup()
 
