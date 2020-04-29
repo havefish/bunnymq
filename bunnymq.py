@@ -93,17 +93,7 @@ class Queue:
         
     def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
-
-        for _ in range(self.max_retries):
-            try:
-                self._put(msg, priority=priority)
-            except pika.exceptions.AMQPError as e:
-                log.error(f'{e}, retrying')
-                self.setup()
-            else:
-                break
-        else:
-            raise Exception('Max retries exceeded.')
+        self._setup_retry(self._put, msg, priority=priority)
 
     def requeue(self):
         try:
