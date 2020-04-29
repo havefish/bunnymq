@@ -11,7 +11,7 @@ import pika
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-logging.getLogger('pika').setLevel('critical')
+logging.getLogger('pika').setLevel(logging.CRITICAL)
 
 
 class Queue:
@@ -93,13 +93,14 @@ class Queue:
     def put(self, msg, priority=5):
         assert 0 < int(priority) <  self.max_priority
 
-        try:
-            return self._put(msg, priority=priority)
-        except pika.exceptions.AMQPError as e:
-            log.error(f'{e}, retrying ...')
-        
-        self.setup()
-        self._put(msg, priority=priority)
+        for _ in range(self.max_retries):
+            try:
+                self._setup()
+                return self._put(msg, priority=priority)
+            except pika.exceptions.AMQPError as e:
+                log.error(f'{e}, retrying')
+
+        raise Exception('Max retries exceeded.')
 
     def requeue(self):
         try:
