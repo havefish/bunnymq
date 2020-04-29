@@ -14,6 +14,23 @@ log.addHandler(logging.NullHandler())
 logging.getLogger('pika').setLevel(logging.CRITICAL)
 
 
+
+class BunnyError(Exception):
+    pass
+
+
+class StatusUnknown(BunnyError):
+    pass
+
+
+class DumpError(BunnyError):
+    pass
+
+
+class LoadError(BunnyError):
+    pass
+
+
 class Queue:
     max_priority = 10
     heartbeat_interval = 600  # 10 min, default 1 min is too low
@@ -72,6 +89,24 @@ class Queue:
 
         self.stream = self.channel.consume(self.queue)
 
+    def _dump(self, msg):
+        if not self.serializer:
+            return msg
+
+        try:
+            return self.serializer.dumps(msg)
+        except Exception as e:
+            raise DumpError(e)
+
+    def _load(self, body):
+        if not self.serializer:
+            return body
+
+        try:
+            return self.serializer.loads(body)
+        except Exception as e:
+            raise LoadError(e)
+
     def setup(self):
         self._retry(self._setup)
         
@@ -79,7 +114,7 @@ class Queue:
         self.channel.basic_publish(
             exchange='',
             routing_key=self.queue,
-            body=self.serializer.dumps(msg) if self.serializer is not None else msg,
+            body=self._dump(msg),
             properties=pika.BasicProperties(delivery_mode=2, priority=priority),
             mandatory=True,
         )
@@ -105,11 +140,11 @@ class Queue:
 
     def __next__(self):
         if self._processing:
-            raise Exception('The previous message was neither marked done nor requeued.')
+            raise StatusUnknown('The previous message was neither marked done nor requeued.')
 
         self._method, _, body = self._setup_retry(next, self.stream)
         self._processing = True
-        self._msg = self.serializer.loads(body) if self.serializer is not None else body
+        self._msg = self._load(body)
 
         return self._msg
 
@@ -145,7 +180,9 @@ class Queue:
         for _ in range(self.max_retries):
             try:
                 return func(*args, **kwargs)
-            except pika.exceptions.AMQPError as e:
+            except BunnyError as e:
+                raise
+            except Exception as e:
                 log.error(f'{e}, retrying')
                 _e = e
                 _onerr and _onerr()
